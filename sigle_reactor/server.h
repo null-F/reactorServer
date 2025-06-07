@@ -8,3 +8,7 @@ int epollRun(int lfd);
 
 //和客户端建立连接
 int acceptClient(int lfd,int epfd);
+
+
+// 主要是接收对端的数据
+int recvHttpRequest(int cfd,int epfd);

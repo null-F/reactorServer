@@ -6,7 +6,8 @@
 #include <sys/epoll.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <string.h>
+#include <errno.h>
 
 int initListenFd(unsigned short port)
 {
@@ -87,17 +88,56 @@ int acceptClient(int lfd,int epfd)
         return -1;
     }
     // 2. 添加到epoll中
-    int flag = fcntl(cfd,F_GETFL);
-    flag |= O_NONBLOCK;
+    int flag = fcntl(cfd,F_GETFL); //设置为非阻塞模式，主要针对于读缓存区数据循环接收
+    flag |= O_NONBLOCK; //非阻塞模式
     fcntl(cfd,F_SETFL,flag);
     // 3. 将cfd添加到epoll中
     struct epoll_event ev;
     ev.data.fd = cfd;
-    ev.events = EPOLLIN | EPOLLET;
+    ev.events = EPOLLIN | EPOLLET; //设置为边沿触发模式
     int ret = epoll_ctl(epfd,EPOLL_CTL_ADD,cfd,&ev);
     if(ret == -1){
         perror("epoll_ctl");
         return -1;
+    }
+    return 0;
+}
+
+int recvHttpRequest(int cfd,int epfd)
+{
+    // 有了存储数据的内存之后，接下来就是读数据
+    // 注意：前面已经把用于通信的文件描述符的事件改成了边缘非阻塞
+    // 如果是边缘模式epoll检测到文件描述符对应的读事件之后，只会给我们通知一次
+    // 因此需要得到这个通知之后，
+    printf("开始接收数据.......\n");
+    int len = 0 , total = 0;
+    char buf[4096] = {0};
+    char temp[1024] = {0};
+    while (len = recv(cfd,temp,sizeof(temp),0) > 0)
+    {
+        if(total + len < sizeof(buf))
+            memcpy(buf+total,temp,len);
+        total += len;
+    }
+    //判断数据是否接收完毕
+    if(len == -1 && errno == EAGAIN){
+        // 说明服务器已经把客户端发过来的请求数据接收完毕了
+        // 解析请求行
+        char* pt = strstr(buf,"\r\n");
+        int reqLen = pt - buf;
+        buf[reqLen] = '\0';
+        parseRequestLine(buf,cfd);
+    }
+    else if(len == 0){
+        //说明客户端断开连接
+        int ret = epoll_ctl(epfd,EPOLL_CTL_DEL,cfd,NULL);
+        if(ret == -1){
+            perror("epoll_ctl");
+            return -1;
+        }
+        close(cfd);
+    }else{
+        perror("recv");
     }
     return 0;
 }
