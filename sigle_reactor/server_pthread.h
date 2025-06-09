@@ -7,10 +7,12 @@ int initListenFd(unsigned short port);
 int epollRun(int lfd);
 
 //和客户端建立连接
-int acceptClient(int lfd,int epfd);
+// int acceptClient(int lfd,int epfd);
+void* acceptClient(void* arg);
 
 // 主要是接收对端的数据
-int recvHttpRequest(int cfd,int epfd);
+// int recvHttpRequest(int cfd,int epfd);
+void* recvHttpRequest(void* arg);
 
 // 解析请求行
 int parseRequestLine(const char* line,int cfd);

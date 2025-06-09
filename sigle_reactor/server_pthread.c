@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 #include <unistd.h>
@@ -13,6 +14,15 @@
 #include <assert.h>
 #include <dirent.h>
 #include <sys/sendfile.h>
+#include <pthread.h>
+#include <ctype.h>
+
+struct FdInfo
+{
+    int fd;
+    int epfd;
+    pthread_t tid;
+};
 
 int initListenFd(unsigned short port)
 {
@@ -76,13 +86,18 @@ int epollRun(int lfd)
             return -1;
         }
         for(int i = 0; i < num; ++i){
+            struct FdInfo* info = (struct FdInfo*)malloc(sizeof(struct FdInfo));
             int fd = evs[i].data.fd;
+            info->fd = fd;
+            info->epfd = epfd;
             if(fd == lfd){
                 //建立连接
-                acceptClient(lfd,epfd);
+                // acceptClient(lfd,epfd);
+                pthread_create(&info->tid,NULL,acceptClient,info);
             }else{
                 //接收对端数据
-                recvHttpRequest(fd,epfd);
+                // recvHttpRequest(fd,epfd);
+                pthread_create(&info->tid,NULL,recvHttpRequest,info);
             }
         }
     }
@@ -90,13 +105,15 @@ int epollRun(int lfd)
 }
 
 // 接受新连接，把得到的新的文件描述符cfd也添加到epoll树上
-int acceptClient(int lfd,int epfd)
+// int acceptClient(int lfd,int epfd)
+void* acceptClient(void* arg)
 {
+    struct FdInfo* info = (struct FdInfo*)arg;
     // 1. 创建套接字，；建立连接
-    int cfd = accept(lfd,NULL,NULL); //后两个参数设置为NULL表示不关注客户端IP地址以及端口号信息
+    int cfd = accept(info->fd,NULL,NULL); //后两个参数设置为NULL表示不关注客户端IP地址以及端口号信息
     if(cfd == -1){
         perror("accept");
-        return -1;
+        return NULL;
     }
     // 2. 添加到epoll中
     int flag = fcntl(cfd,F_GETFL); //设置为非阻塞模式，主要针对于读缓存区数据循环接收
@@ -106,16 +123,20 @@ int acceptClient(int lfd,int epfd)
     struct epoll_event ev;
     ev.data.fd = cfd;
     ev.events = EPOLLIN | EPOLLET; //设置为边沿触发模式
-    int ret = epoll_ctl(epfd,EPOLL_CTL_ADD,cfd,&ev);
+    int ret = epoll_ctl(info->epfd,EPOLL_CTL_ADD,cfd,&ev);
     if(ret == -1){
         perror("epoll_ctl");
-        return -1;
+        return NULL;
     }
-    return 0;
+    printf("acceptclient threadId: %ld\n",info->tid);
+    free(info);
+    return NULL;
 }
 
-int recvHttpRequest(int cfd,int epfd)
+// int recvHttpRequest(int cfd,int epfd)
+void* recvHttpRequest(void* arg)
 {
+    struct FdInfo* info = (struct FdInfo*)arg;
     // 有了存储数据的内存之后，接下来就是读数据
     // 注意：前面已经把用于通信的文件描述符的事件改成了边缘非阻塞
     // 如果是边缘模式epoll检测到文件描述符对应的读事件之后，只会给我们通知一次
@@ -124,7 +145,7 @@ int recvHttpRequest(int cfd,int epfd)
     int len = 0 , total = 0;
     char buf[4096] = {0};
     char temp[1024] = {0};
-    while ((len = recv(cfd,temp,sizeof(temp),0)) > 0)//这里有个优先级别的问题，这个问题>的优先级高于=，所以>前面要整体括起来，这个问题当时找了很久
+    while ((len = recv(info->fd,temp,sizeof(temp),0)) > 0)//这里有个优先级别的问题，这个问题>的优先级高于=，所以>前面要整体括起来，这个问题当时找了很久
     /*
     这个问题带来的后果如下：
     缓冲区数据永远不会累积：len 不是实际读取字节数，只是布尔真假；memcpy 就算拷贝，也永远拷贝1字节，即使 recv 真正读了100字节，也只拷贝1字节，剩余的数据被丢弃
@@ -143,20 +164,22 @@ int recvHttpRequest(int cfd,int epfd)
         char* pt = strstr(buf,"\r\n");
         int reqLen = pt - buf;
         buf[reqLen] = '\0';
-        parseRequestLine(buf,cfd);
+        parseRequestLine(buf,info->fd);
     }
     else if(len == 0){
         //说明客户端断开连接
-        int ret = epoll_ctl(epfd,EPOLL_CTL_DEL,cfd,NULL);
+        int ret = epoll_ctl(info->epfd,EPOLL_CTL_DEL,info->fd,NULL);
         if(ret == -1){
             perror("epoll_ctl");
             return -1;
         }
-        close(cfd);
+        close(info->fd);
     }else{
         perror("recv");
     }
-    return 0;
+    printf("recvMsg threadId: %ld\n",info->tid);
+    free(info);
+    return NULL;
 }
 
 /*
