@@ -21,7 +21,7 @@ static int epollClear(struct EventLoop* evLoop);
 static int epollCtl(struct Channel* channel,struct EventLoop* evLoop,int op);
 
 //EpollDispatcher 是 Dispatcher 的一个实例
-struct Dispatcher EpoolDispatcher = {
+struct Dispatcher EpollDispatcher = {
     epollInit,
     epollAdd,
     epollRemove,
