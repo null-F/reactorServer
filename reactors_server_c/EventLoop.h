@@ -2,6 +2,7 @@
 #include "Dispatcher.h"
 #include <pthread.h>
 #include "Channel.h"
+#include <sys/socket.h>
 
 extern struct Dispatcher EpollDispatcher;
 struct EventLoop{
@@ -20,6 +21,7 @@ struct EventLoop{
     pthread_t threadID;
     char threadName[32];
     pthread_mutex_t mutex;
+    int socketPair[2]; ////存储本地通信的fd 通过socketpair初始化
     // 待补充..........
 
 };
@@ -50,6 +52,13 @@ int eventActivate(struct EventLoop* evLoop, int fd, int event);
 // 添加任务到任务队列
 int eventLoopAddTask(struct EventLoop* evLoop,struct Channel* channel,int type);
 
-/*
-    有需要补充的内容
-*/
+// 处理任务队列中的任务
+int eventLoopProcessTask(struct EventLoop* evLoop);
+
+// 处理dispatcher中的任务
+int eventLoopAdd(struct EventLoop* evLoop,struct Channel* channel);
+int eventLoopRemove(struct EventLoop* evLoop,struct Channel* channel);
+int eventLoopModify(struct EventLoop* evLoop,struct Channel* channel);
+
+// 释放channel
+int destroyChannel(struct EventLoop* evLoop,struct Channel* channel);
