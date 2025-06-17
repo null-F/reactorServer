@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <string.h>
 
 // 初始化
 struct Buffer* bufferInit(int size)
@@ -144,4 +145,13 @@ int bufferSendData(struct Buffer* buf,int socket)
         return count;
     }
     return 0;
+}
+
+// 根据\r\n取出一行,找到其在数据块中的位置，返回该位置
+char* bufferFindCRLF(struct Buffer* buf)
+{
+    // strstr --> 从大字符串中去匹配子字符串（遇到\0结束）
+    // memmem --> 从大数据块中去匹配子数据块（需要指定数据块大小）
+    char* ptr = memmem(buf->data + buf->readPos, bufferReadableSize(buf),"\r\n",2);
+    return ptr;
 }

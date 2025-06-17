@@ -33,3 +33,6 @@ int bufferSocketRead(struct Buffer* buf,int fd);
 
 // 发送数据
 int bufferSendData(struct Buffer* buf,int socket);
+
+// 根据\r\n取出一行,找到其在数据块中的位置，返回该位置
+char* bufferFindCRLF(struct Buffer* buf);

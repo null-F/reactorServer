@@ -96,7 +96,7 @@ char* splitRequestLine(const char* start,const char* end,const char* sub,char** 
     *ptr = tmp;// 对ptr进行解引用=>*ptr(一级指针),让其指向tmp指针指向的地址
     return space+1;
 }
- 
+
 // 解析请求行
 bool parseHttpRequestLine(struct HttpRequest* req,struct Buffer* readBuf) {
     // 读取请求行
@@ -214,7 +214,7 @@ bool parseHttpRequest(struct HttpRequest* req,struct Buffer* readBuf,
     return flag;
 }
  
-// 处理基于get的http请求
+// 处理基于get的http请求 根据解析出的原始数据，对客户端的请求做出处理
 bool processHttpRequest(struct HttpRequest* req,struct HttpResponse* response) {
     if(strcasecmp(req->method,"get") != 0) {
         return -1;

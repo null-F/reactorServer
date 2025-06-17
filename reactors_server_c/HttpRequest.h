@@ -38,7 +38,7 @@ void httpRequestReset(struct HttpRequest* req);
 void httpRequestResetEx(struct HttpRequest* req);
 // 销毁
 void httpRequestDestroy(struct HttpRequest* req);
- 
+
 // 获取处理状态
 enum HttpRequestState httpRequestState(struct HttpRequest* req);
  

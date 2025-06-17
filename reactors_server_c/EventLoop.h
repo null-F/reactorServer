@@ -5,6 +5,9 @@
 #include <sys/socket.h>
 
 extern struct Dispatcher EpollDispatcher;
+extern struct Dispatcher PollDispatcher;
+extern struct Dispatcher SelectDispatcher;
+
 struct EventLoop{
     bool isQuit; //开关
     struct Dispatcher* dispatcher;
@@ -22,10 +25,10 @@ struct EventLoop{
     char threadName[32];
     pthread_mutex_t mutex;
     int socketPair[2]; ////存储本地通信的fd 通过socketpair初始化
-    // 待补充..........
-
 };
+ 
 
+// 处理该节点中的channel的方式
 enum ElemType{
     ADD,    //添加
     DELETE, //删除

@@ -5,6 +5,7 @@
 #include <stdlib.h>
  
 #define ResHeaderSize 16
+
 // 初始化
 struct HttpResponse* httpResponseInit() {
     struct HttpResponse* response = (struct HttpResponse*)malloc(sizeof(struct HttpResponse));
