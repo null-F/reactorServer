@@ -4,11 +4,19 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 //初始化函数
 struct EventLoop* eventLoopInit()
 {
     return eventLoopInitEx(NULL);
+}
+
+
+// 写数据
+void taskWakeup(struct EventLoop* evLoop) {
+    const char* msg = "我是要成为海贼王的男人！";
+    write(evLoop->socketPair[0],msg,strlen(msg));
 }
 
 // 读数据

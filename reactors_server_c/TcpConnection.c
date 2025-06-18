@@ -1,5 +1,6 @@
 #include "TcpConnection.h"
 #include "Log.h"
+#include <stdlib.h>
 
 // 接收客户端数据
 // 接收客户端数据

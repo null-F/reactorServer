@@ -1,9 +1,12 @@
+#define _GNU_SOURCE
 #include "Buffer.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/uio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <strings.h>
 #include <string.h>
 
 // 初始化
@@ -68,7 +71,7 @@ void bufferExtendRoom(struct Buffer* buf, int size)
         }
         memset(temp + buf->capacity, 0, size);// 只需要对拓展出来的大小为size的内存块进行初始化就可以了
         //更新数据
-        buf->readPos = temp;
+        buf->data = temp;
         buf->capacity += size;
     }
 }
@@ -153,5 +156,9 @@ char* bufferFindCRLF(struct Buffer* buf)
     // strstr --> 从大字符串中去匹配子字符串（遇到\0结束）
     // memmem --> 从大数据块中去匹配子数据块（需要指定数据块大小）
     char* ptr = memmem(buf->data + buf->readPos, bufferReadableSize(buf),"\r\n",2);
+
     return ptr;
 }
+
+
+

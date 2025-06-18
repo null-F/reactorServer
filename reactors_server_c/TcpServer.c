@@ -11,14 +11,14 @@ struct Listener* listenerInit(unsigned short port){
     int lfd = socket(AF_INET,SOCK_STREAM,0);
     if(lfd == -1){
         perror("socket");
-        return -1;
+        return NULL;
     }
     //2.设置端口号复用
     int opt = 1;
     int ret = setsockopt(lfd,SOL_SOCKET,SO_REUSEADDR,&opt,sizeof(opt));
     if(ret == -1){
         perror("setsockport");
-        return -1;
+        return NULL;
     }  
     //3.绑定
     struct sockaddr_in addr;
@@ -28,13 +28,13 @@ struct Listener* listenerInit(unsigned short port){
     ret = bind(lfd,(struct sockaddr*)&addr,sizeof(addr));
     if(ret == -1){
         perror("bind");
-        return -1;
+        return NULL;
     }
     //4.设置监听
     ret = listen(lfd,128);
     if(ret == -1){
         perror("listen");
-        return -1;
+        return NULL;
     }
     listener->lfd = lfd;
     listener->port = port;
@@ -61,7 +61,7 @@ int acceptConnection(void* arg) {
         return -1;
     }
     // 从线程池中去取出一个子线程的反应堆实例，去处理这个cfd
-    struct EventLoop* evLoop = takeWorkerEventLoop(server->mainLoop);
+    struct EventLoop* evLoop = takeWorkerEventLoop(server->threadPool);
     // 将cfd放到 TcpConnection中处理
     tcpConnectionInit(cfd, evLoop);
     return 0;

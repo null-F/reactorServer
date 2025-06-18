@@ -3,6 +3,8 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include "Buffer.h"
+#include "HttpRequest.h"
+#include "HttpResponse.h"
 
 // #define MSG_SEND_AUTO
 

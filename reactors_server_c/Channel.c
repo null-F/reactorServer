@@ -1,4 +1,5 @@
 #include "Channel.h"
+#include <stdlib.h>
 
 //初始化channel
 struct Channel* channelInit(int fd, int events, handleFunc readFunc, handleFunc writeFunc, handleFunc destroyFunc, void* arg)

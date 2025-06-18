@@ -101,7 +101,7 @@ static int epollDispatch(struct EventLoop* evLoop,int timeout)// 单位:s
     struct EpollData* data = (struct EpollData*)evLoop->dispatcherData;
     int count = epoll_wait(data->epfd,data->events,Max,timeout*1000);
     for(int i = 0; i < count; ++i){
-        int events = data->events;
+        int events = data->events[i].events;
         int fd = data->events[i].data.fd;
                 if(events & EPOLLERR || events & EPOLLHUP) {
             // 对方断开了连接，删除 fd
@@ -109,10 +109,12 @@ static int epollDispatch(struct EventLoop* evLoop,int timeout)// 单位:s
             continue;
         }
         if(events & EPOLLIN) {
-            // ...(待续写)
+            // 已续写
+            eventActivate(evLoop,fd,ReadEvent);
         }
         if(events & EPOLLOUT) {
-            // ...(待续写)
+            // 已续写
+            eventActivate(evLoop,fd,WriteEvent);
         }
     }
     return 0;
@@ -122,12 +124,8 @@ static int epollClear(struct EventLoop* evLoop)
 {
     struct EpollData* data = (struct EpollData*)evLoop->dispatcherData;
     free(data->events);
-    free(data->epfd);
+    close(data->epfd);//注意这里用clode关闭文件描述符，不是用free
     free(data);
     return 0;
 }
 
-/*
-    86行函数需要补充
-    111和114的读写事件需要补充
-*/

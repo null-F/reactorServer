@@ -10,7 +10,7 @@ struct ThreadPool* threadPoolInit(struct EventLoop* mainLoop, int threadNum) {
     pool->index = 0;
     pool->isStart = false;
     pool->threadNum = threadNum; // 子线程总个数
-    pool->workerThreads = (struct WokerThread*)malloc(sizeof(struct WorkerThread) * threadNum); // 子线程数组
+    pool->workerThreads = (struct WorkerThread*)malloc(sizeof(struct WorkerThread) * threadNum); // 子线程数组
     return pool;
 }
 
