@@ -18,9 +18,9 @@ struct Channel* channelInit(int fd, int events, handleFunc readFunc, handleFunc 
 void writeEventEnable(struct Channel* channel, bool flag)
 {
     if(flag){
-        channel->events |= WriteEvent;
+        channel->events |= WriteEvent; //设置为检测写事件
     }else{
-        channel->events &= (~WriteEvent);
+        channel->events &= (~WriteEvent); //设置为不检测写事件
     }
 }
 

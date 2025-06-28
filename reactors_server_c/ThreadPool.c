@@ -18,7 +18,7 @@ struct ThreadPool* threadPoolInit(struct EventLoop* mainLoop, int threadNum) {
 void threadPoolRun(struct ThreadPool* pool)
 {
     //线程池创建好之后就要让线程池中的若干子线程运行起来
-    //取保线程池未运行
+    //确保线程池未运行
     assert(pool && !pool->isStart);
     // 比较主线程的ID和当前线程ID是否相等 
     // 相等=>确保执行线程为主线程；不相等=>exit(0)
@@ -35,6 +35,11 @@ void threadPoolRun(struct ThreadPool* pool)
 }                                
 
 // 取出线程池中某个子线程的反应堆实例
+/*
+    这个函数是主线程调用的，因为主线程是拥有线程池的。
+    因此主线程可以遍历线程池里边的子线程，从中挑选一个子线程，
+    得到它的反应堆模型，再将处理的任务放到反应堆模型里边
+*/
 struct EventLoop* takeWorkerEventLoop(struct ThreadPool* pool)
 {
     assert(pool->isStart); // 确保线程池处于运行状态

@@ -103,7 +103,7 @@ static int epollDispatch(struct EventLoop* evLoop,int timeout)// 单位:s
     for(int i = 0; i < count; ++i){
         int events = data->events[i].events;
         int fd = data->events[i].data.fd;
-                if(events & EPOLLERR || events & EPOLLHUP) {
+        if(events & EPOLLERR || events & EPOLLHUP) {
             // 对方断开了连接，删除 fd
             // epollRemove(&evLoop->channels[fd],evLoop);
             continue;
